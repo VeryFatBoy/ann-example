@@ -53,21 +53,21 @@ ORDER BY score
 LIMIT 5;
 
 INSERT INTO train_data_vec (idx, label, vector) (
-    SELECT idx, label, vector
-    FROM train_data_blob
+     SELECT idx, label, vector
+     FROM train_data_blob
 );
 
 INSERT INTO test_data_vec (idx, label, vector) (
-    SELECT idx, label, vector
-    FROM test_data_blob
+     SELECT idx, label, vector
+     FROM test_data_blob
 );
 
 ALTER TABLE train_data_vec ADD VECTOR INDEX (vector)
-    INDEX_OPTIONS '{
-    "index_type":"IVF_FLAT",
-    "nlist":1000,
-    "metric_type":"EUCLIDEAN_DISTANCE"
-    }';
+     INDEX_OPTIONS '{
+          "index_type":"IVF_FLAT",
+          "nlist":1000,
+          "metric_type":"EUCLIDEAN_DISTANCE"
+     }';
 
 SET @qv_train_vec = (
      SELECT vector
