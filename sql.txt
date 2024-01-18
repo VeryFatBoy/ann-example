@@ -3,66 +3,66 @@ CREATE DATABASE IF NOT EXISTS fmnist_db;
 USE fmnist_db;
 
 CREATE TABLE IF NOT EXISTS train_data_blob (
-     img_idx INT(10) UNSIGNED NOT NULL,
-     img_label VARCHAR(20),
-     img_vector BLOB,
-     KEY(img_idx)
+     idx INT(10) UNSIGNED NOT NULL,
+     label VARCHAR(20),
+     vector BLOB,
+     KEY(idx)
 );
 
 CREATE TABLE IF NOT EXISTS test_data_blob (
-     img_idx INT(10) UNSIGNED NOT NULL,
-     img_label VARCHAR(20),
-     img_vector BLOB,
-     KEY(img_idx)
+     idx INT(10) UNSIGNED NOT NULL,
+     label VARCHAR(20),
+     vector BLOB,
+     KEY(idx)
 );
 
 CREATE TABLE IF NOT EXISTS train_data_vec (
-     img_idx INT(10) UNSIGNED NOT NULL,
-     img_label VARCHAR(20),
-     img_vector VECTOR(784) NOT NULL,
-     KEY(img_idx)
+     idx INT(10) UNSIGNED NOT NULL,
+     label VARCHAR(20),
+     vector VECTOR(784) NOT NULL,
+     KEY(idx)
 );
 
 CREATE TABLE IF NOT EXISTS test_data_vec (
-     img_idx INT(10) UNSIGNED NOT NULL,
-     img_label VARCHAR(20),
-     img_vector VECTOR(784) NOT NULL,
-     KEY(img_idx)
+     idx INT(10) UNSIGNED NOT NULL,
+     label VARCHAR(20),
+     vector VECTOR(784) NOT NULL,
+     KEY(idx)
 );
 
 SET @qv_train_blob = (
-     SELECT img_vector
+     SELECT vector
      FROM train_data_blob
-     WHERE img_idx = 30000
+     WHERE idx = 30000
 );
 
 SET @qv_test_blob = (
-     SELECT img_vector
+     SELECT vector
      FROM test_data_blob
-     WHERE img_idx = 500
+     WHERE idx = 500
 );
 
-SELECT img_label, EUCLIDEAN_DISTANCE(img_vector, @qv_train_blob) AS score
+SELECT label, EUCLIDEAN_DISTANCE(vector, @qv_train_blob) AS score
 FROM train_data_blob
 ORDER BY score
 LIMIT 5;
 
-SELECT img_label, EUCLIDEAN_DISTANCE(img_vector, @qv_test_blob) AS score
+SELECT label, EUCLIDEAN_DISTANCE(vector, @qv_test_blob) AS score
 FROM train_data_blob
 ORDER BY score
 LIMIT 5;
 
-INSERT INTO train_data_vec (img_idx, img_label, img_vector) (
-    SELECT img_idx, img_label, img_vector
+INSERT INTO train_data_vec (idx, label, vector) (
+    SELECT idx, label, vector
     FROM train_data_blob
 );
 
-INSERT INTO test_data_vec (img_idx, img_label, img_vector) (
-    SELECT img_idx, img_label, img_vector
+INSERT INTO test_data_vec (idx, label, vector) (
+    SELECT idx, label, vector
     FROM test_data_blob
 );
 
-ALTER TABLE train_data_vec ADD VECTOR INDEX (img_vector)
+ALTER TABLE train_data_vec ADD VECTOR INDEX (vector)
     INDEX_OPTIONS '{
     "index_type":"IVF_FLAT",
     "nlist":1000,
@@ -70,23 +70,23 @@ ALTER TABLE train_data_vec ADD VECTOR INDEX (img_vector)
     }';
 
 SET @qv_train_vec = (
-     SELECT img_vector
+     SELECT vector
      FROM train_data_vec
-     WHERE img_idx = 30000
+     WHERE idx = 30000
 );
 
 SET @qv_test_vec = (
-     SELECT img_vector
+     SELECT vector
      FROM test_data_vec
-     WHERE img_idx = 500
+     WHERE idx = 500
 );
 
-SELECT img_label, img_vector <-> @qv_train_vec AS score
+SELECT label, vector <-> @qv_train_vec AS score
 FROM train_data_vec
 ORDER BY score
 LIMIT 5;
 
-SELECT img_label, img_vector <-> @qv_test_vec AS score
+SELECT label, vector <-> @qv_test_vec AS score
 FROM train_data_vec
 ORDER BY score
 LIMIT 5;
