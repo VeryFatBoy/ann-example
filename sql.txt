@@ -1,45 +1,50 @@
+DROP DATABASE IF EXISTS fmnist_db;
 CREATE DATABASE IF NOT EXISTS fmnist_db;
 
 USE fmnist_db;
 
+DROP TABLE IF EXISTS train_data_blob;
 CREATE TABLE IF NOT EXISTS train_data_blob (
-     idx INT(10) UNSIGNED NOT NULL,
-     label VARCHAR(20),
-     vector BLOB,
-     KEY(idx)
+    idx INT(10) UNSIGNED NOT NULL,
+    label VARCHAR(20),
+    vector BLOB,
+    KEY(idx)
 );
 
+DROP TABLE IF EXISTS test_data_blob;
 CREATE TABLE IF NOT EXISTS test_data_blob (
-     idx INT(10) UNSIGNED NOT NULL,
-     label VARCHAR(20),
-     vector BLOB,
-     KEY(idx)
+    idx INT(10) UNSIGNED NOT NULL,
+    label VARCHAR(20),
+    vector BLOB,
+    KEY(idx)
 );
 
+DROP TABLE IF EXISTS train_data_vec;
 CREATE TABLE IF NOT EXISTS train_data_vec (
-     idx INT(10) UNSIGNED NOT NULL,
-     label VARCHAR(20),
-     vector VECTOR(784) NOT NULL,
-     KEY(idx)
+    idx INT(10) UNSIGNED NOT NULL,
+    label VARCHAR(20),
+    vector VECTOR(784) NOT NULL,
+    KEY(idx)
 );
 
+DROP TABLE IF EXISTS test_data_vec;
 CREATE TABLE IF NOT EXISTS test_data_vec (
-     idx INT(10) UNSIGNED NOT NULL,
-     label VARCHAR(20),
-     vector VECTOR(784) NOT NULL,
-     KEY(idx)
+    idx INT(10) UNSIGNED NOT NULL,
+    label VARCHAR(20),
+    vector VECTOR(784) NOT NULL,
+    KEY(idx)
 );
 
 SET @qv_train_blob = (
-     SELECT vector
-     FROM train_data_blob
-     WHERE idx = 30000
+    SELECT vector
+    FROM train_data_blob
+    WHERE idx = 30000
 );
 
 SET @qv_test_blob = (
-     SELECT vector
-     FROM test_data_blob
-     WHERE idx = 500
+    SELECT vector
+    FROM test_data_blob
+    WHERE idx = 500
 );
 
 SELECT label, EUCLIDEAN_DISTANCE(vector, @qv_train_blob) AS score
@@ -53,32 +58,32 @@ ORDER BY score
 LIMIT 5;
 
 INSERT INTO train_data_vec (idx, label, vector) (
-     SELECT idx, label, vector
-     FROM train_data_blob
+    SELECT idx, label, vector
+    FROM train_data_blob
 );
 
 INSERT INTO test_data_vec (idx, label, vector) (
-     SELECT idx, label, vector
-     FROM test_data_blob
+    SELECT idx, label, vector
+    FROM test_data_blob
 );
 
 ALTER TABLE train_data_vec ADD VECTOR INDEX (vector)
-     INDEX_OPTIONS '{
-          "index_type":"IVF_FLAT",
-          "nlist":1000,
-          "metric_type":"EUCLIDEAN_DISTANCE"
-     }';
+    INDEX_OPTIONS '{
+        "index_type":"IVF_FLAT",
+        "nlist":1000,
+        "metric_type":"EUCLIDEAN_DISTANCE"
+    }';
 
 SET @qv_train_vec = (
-     SELECT vector
-     FROM train_data_vec
-     WHERE idx = 30000
+    SELECT vector
+    FROM train_data_vec
+    WHERE idx = 30000
 );
 
 SET @qv_test_vec = (
-     SELECT vector
-     FROM test_data_vec
-     WHERE idx = 500
+    SELECT vector
+    FROM test_data_vec
+    WHERE idx = 500
 );
 
 SELECT label, vector <-> @qv_train_vec AS score
@@ -90,3 +95,14 @@ SELECT label, vector <-> @qv_test_vec AS score
 FROM train_data_vec
 ORDER BY score
 LIMIT 5;
+
+-- Cleanup
+
+DROP INDEX vector ON train_data_vec;
+
+DROP TABLE IF EXISTS train_data_blob;
+DROP TABLE IF EXISTS test_data_blob;
+DROP TABLE IF EXISTS train_data_vec;
+DROP TABLE IF EXISTS test_data_vec;
+
+DROP DATABASE IF EXISTS fmnist_db;
